@@ -49,15 +49,24 @@ def socketThread(client):
             room = message.decode("utf8")
             clients[name]['room'] = room
             message = "%s has joined %s!" % (name,room)
-            broadcast(bytes(message, "utf8"),room)
+            try:
+                broadcast(bytes(message, "utf8"),room)
+            except:
+                print('Client connection lost')
         elif message != bytes("{disconnect}", "utf8"):
             broadcast(message, room, name+": ")
         else:
-            client.send(bytes("{disconnect}", "utf8"))
-            client.close()
-            del clients[client]
-            broadcast(bytes("%s has left the chat." % name, "utf8"), room)
+            try:
+                client.send(bytes("{disconnect}", "utf8"))
+            except:
+                print('Client connection lost')
+            try:
+                broadcast(bytes("%s has left the chat." % name, "utf8"), room)
+            except:
+                print('Client connection lost')
             break
+    #client.close()
+    #del client[name]['socket']
 
 
 def broadcast(msg, room, prefix=""):  # prefix is for name identification.
