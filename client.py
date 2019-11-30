@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Script for Tkinter GUI chat client."""
 from socket import AF_INET, socket, SOCK_STREAM
+import socketserver
 from threading import Thread
 import tkinter
 import time
@@ -22,7 +23,6 @@ def send(event=None):  # event is passed by binders.
     my_msg.set("")  # Clears input field.
     client_socket.send(bytes(msg, "utf8"))
     if msg == "{disconnect}":
-        client_socket.shutdown()
         client_socket.close()
         top.quit()
 

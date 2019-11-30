@@ -1,4 +1,5 @@
 from socket import AF_INET, socket, SOCK_STREAM
+import socketserver
 from threading import Thread
 import threading
 
@@ -53,10 +54,11 @@ def socketThread(client):
         elif message != bytes("{disconnect}", "utf8"):
             broadcast(message, room, name+": ")
         else:
-            client.send(bytes("{disconnect}", "utf8"))
-            broadcast(bytes("%s has left the chat." % name, "utf8"), room)
-            client.shutdown()
-            client.close()
+            try:
+                client.send(bytes("{disconnect}", "utf8"))
+                broadcast(bytes("%s has left the chat." % name, "utf8"), room)
+            except:
+                pass
             break
             
 
@@ -67,7 +69,10 @@ def broadcast(msg, room, prefix=""):  # prefix is for name identification.
     for user in clients.values():
         print(user['socket'])
         if user['room'] == room:
-            user['socket'].send(bytes(prefix, "utf8")+msg)
+            try:
+                user['socket'].send(bytes(prefix, "utf8")+msg)
+            except:
+                pass
 
         
 clients = {}
