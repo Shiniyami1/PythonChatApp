@@ -2,8 +2,7 @@
 """Script for Tkinter GUI chat client."""
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
-import tkinter
-import time
+import tkinter, time, pygame
 
 
 def receive():
@@ -12,6 +11,9 @@ def receive():
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
             msg_list.insert(tkinter.END, msg)
+            pygame.mixer.init()
+            recvNotification = pygame.mixer.Sound('when.wav')
+            recvNotification.play()
         except OSError:  # Possibly client has left the chat.
             break
 
@@ -21,9 +23,14 @@ def send(event=None):  # event is passed by binders.
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
     client_socket.send(bytes(msg, "utf8"))
+
     if msg == "{disconnect}":
+        pygame.mixer.init()
+        sendNotification = pygame.mixer.Sound('eventually.wav')
+        sendNotification.play()
         client_socket.close()
         top.quit()
+            
 
 
 def on_closing(event=None):
@@ -65,6 +72,7 @@ try:
     client_socket.connect(ADDR)
 except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
     msg_list.insert(tkinter.END, 'Client failed to connect to server!')
+    client_socket.recv(BUFSIZ)
     client_socket.close()
     time.sleep(5)
     top.quit()
