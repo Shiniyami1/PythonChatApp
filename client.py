@@ -3,6 +3,7 @@
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import tkinter
+import time
 
 
 def receive():
@@ -20,25 +21,25 @@ def send(event=None):  # event is passed by binders.
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
     client_socket.send(bytes(msg, "utf8"))
-    if msg == "{quit}":
+    if msg == "{disconnect}":
         client_socket.close()
         top.quit()
 
 
 def on_closing(event=None):
     """This function is to be called when the window is closed."""
-    my_msg.set("{quit}")
+    my_msg.set("{disconnect}")
     send()
 
 top = tkinter.Tk()
-top.title("Chatter")
+top.title("SE3313 Project 2019 Chat")
 
 messages_frame = tkinter.Frame(top)
 my_msg = tkinter.StringVar()  # For the messages to be sent.
-my_msg.set("Type your messages here.")
+# my_msg.set("Type your messages here.")
 scrollbar = tkinter.Scrollbar(messages_frame)  # To navigate through past messages.
 # Following will contain the messages.
-msg_list = tkinter.Listbox(messages_frame, height=15, width=50, yscrollcommand=scrollbar.set)
+msg_list = tkinter.Listbox(messages_frame, height=30, width=100, yscrollcommand=scrollbar.set)
 scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
 msg_list.pack()
@@ -64,7 +65,13 @@ BUFSIZ = 1024
 ADDR = (HOST, PORT)
 
 client_socket = socket(AF_INET, SOCK_STREAM)
-client_socket.connect(ADDR)
+try:
+    client_socket.connect(ADDR)
+except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
+    msg_list.insert(tkinter.END, 'Client failed to connect to server!')
+    client_socket.close()
+    time.sleep(5)
+    top.quit()
 
 receive_thread = Thread(target=receive)
 receive_thread.start()
