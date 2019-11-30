@@ -49,30 +49,23 @@ def socketThread(client):
             room = message.decode("utf8")
             clients[name]['room'] = room
             message = "%s has joined %s!" % (name,room)
-            try:
-                broadcast(bytes(message, "utf8"),room)
-            except:
-                print('Client connection lost')
+            broadcast(bytes(message, "utf8"),room)
         elif message != bytes("{disconnect}", "utf8"):
             broadcast(message, room, name+": ")
         else:
-            try:
-                client.send(bytes("{disconnect}", "utf8"))
-            except:
-                print('Client connection lost')
-            try:
-                broadcast(bytes("%s has left the chat." % name, "utf8"), room)
-            except:
-                print('Client connection lost')
+            client.send(bytes("{disconnect}", "utf8"))
+            broadcast(bytes("%s has left the chat." % name, "utf8"), room)
+            client.shutdown()
+            client.close()
             break
-    #client.close()
-    #del client[name]['socket']
+            
 
 
 def broadcast(msg, room, prefix=""):  # prefix is for name identification.
     """Broadcasts a message to all the clients."""
-    print(clients)
+
     for user in clients.values():
+        print(user['socket'])
         if user['room'] == room:
             user['socket'].send(bytes(prefix, "utf8")+msg)
 

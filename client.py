@@ -22,6 +22,7 @@ def send(event=None):  # event is passed by binders.
     my_msg.set("")  # Clears input field.
     client_socket.send(bytes(msg, "utf8"))
     if msg == "{disconnect}":
+        client_socket.shutdown()
         client_socket.close()
         top.quit()
 
@@ -65,7 +66,9 @@ try:
     client_socket.connect(ADDR)
 except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
     msg_list.insert(tkinter.END, 'Client failed to connect to server!')
+
     client_socket.close()
+    
     time.sleep(5)
     top.quit()
 
