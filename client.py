@@ -47,7 +47,7 @@ messages_frame.pack()
 
 entry_field = tkinter.Entry(top, textvariable=my_msg)
 entry_field.bind("<Return>", send)
-entry_field.pack()
+entry_field.pack(ipadx=175)
 send_button = tkinter.Button(top, text="Send", command=send)
 send_button.pack()
 
