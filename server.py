@@ -2,20 +2,30 @@ from socket import AF_INET, socket, SOCK_STREAM
 import socketserver
 from threading import Thread
 import threading
-
-class socketThread(Thread):
-    def __init__(self, client):
+ 
+class serverThread(Thread):
+    def __init__(self):
         self._running = False
+        self._threads = list()
         self.stop = threading.Event()
-        self.clientSocket = client
         Thread.__init__(self, target=self.threadMain)
-        print('init')
-    
-    def threadMain(self): 
-        # Handles each client request
+
+    def threadMain(self):
+        # Handles each incoming connection request
+        while not self.stop.wait(1):
+            print('running')
+            try: 
+                self._running = True
+                client, client_address = server.accept()
+                print("%s:%s has connected." % client_address)
+                addresses[client] = client_address
+                Thread(target=self.chatroom, args=(client,)).start()
+            except:
+                print("\nFailed to connect to client")
+            finally:
+                self._running = False
+    def chatroom(self, client):
         print('test')
-        print(self.clientSocket)
-        client = self.clientSocket
         client.send(bytes("Please enter your username", "utf8"))
         name = client.recv(buffer).decode("utf8")
         welcome = 'Type {disconnect} to exit.'
@@ -31,7 +41,6 @@ class socketThread(Thread):
             client.send(bytes(roomPrompt, "utf8"))
         except:
             print("\nFailed to send room prompt message to client")
-    
         while True:
             message = client.recv(buffer)
             if clients[name]['room'] == '':
@@ -49,42 +58,15 @@ class socketThread(Thread):
                 finally:
                     self.broadcast(bytes("%s has left the chat." % name, "utf8"), room)
                 break
-    def broadcast(self, msg, room, prefix=""):  # prefix is for name identification.
-        """Broadcasts a message to all the clients."""
+    def broadcast(self, msg, room, prefix=""):
         for user in clients.values():
             if user['room'] == room:
                 try:
                     user['socket'].send(bytes(prefix, "utf8")+msg)
                 except:
                     print("Client " +str(user['socket'])+ " has disconnected")
-
     def terminate(self):
-        self.stop.set()
-            
-
-class serverThread(Thread):
-    def __init__(self):
-        self._running = False
-        self._sockets = list()
-        self.stop = threading.Event()
-        Thread.__init__(self, target=self.threadMain)
-
-    def threadMain(self):
-        # Handles each incoming connection request
-        while not self.stop.wait(1):
-            print('running')
-            try: 
-                self._running = True
-                client, client_address = server.accept()
-                print("%s:%s has connected." % client_address)
-                addresses[client] = client_address
-                socketThread(client)
-            except:
-                print("\nFailed to connect to client")
-            finally:
-                self._running = False
-                
-    def terminate(self):
+        print(self._threads)
         self.stop.set()
 
         
