@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Script for Tkinter GUI chat client."""
 from socket import AF_INET, socket, SOCK_STREAM
+import socketserver
 from threading import Thread
 import tkinter, time, pygame
 
@@ -61,7 +62,7 @@ send_button.pack()
 top.protocol("WM_DELETE_WINDOW", on_closing)
 
 #----Now comes the sockets part----
-HOST = '34.207.137.115'
+HOST = 'localhost'
 PORT = 4200
 
 BUFSIZ = 1024
@@ -72,8 +73,9 @@ try:
     client_socket.connect(ADDR)
 except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
     msg_list.insert(tkinter.END, 'Client failed to connect to server!')
-    client_socket.recv(BUFSIZ)
+
     client_socket.close()
+    
     time.sleep(5)
     top.quit()
 
