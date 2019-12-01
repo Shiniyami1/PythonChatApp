@@ -126,8 +126,10 @@ if __name__ == "__main__":
     print("Waiting for connections...\n")
     server_thread = serverThread()
     server_thread.start()
-    terminate = input("Enter 'shutdown' to terminate server\n")
-    if terminate == 'shutdown':
-        server_thread.terminate()
-        server_thread.join()
+    while True:
+        terminate = input("Enter 'shutdown' to terminate server\n")
+        if terminate == 'shutdown':
+            server_thread.terminate()
+            server_thread.join()
+            break
     server.close()
