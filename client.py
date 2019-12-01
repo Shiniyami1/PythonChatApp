@@ -3,8 +3,7 @@
 from socket import AF_INET, socket, SOCK_STREAM
 import socketserver
 from threading import Thread
-import tkinter
-import time
+import tkinter, time, pygame
 
 
 def receive():
@@ -13,6 +12,9 @@ def receive():
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
             msg_list.insert(tkinter.END, msg)
+            pygame.mixer.init()
+            recvNotification = pygame.mixer.Sound('when.wav')
+            recvNotification.play()
         except OSError:  # Possibly client has left the chat.
             break
 
@@ -22,9 +24,14 @@ def send(event=None):  # event is passed by binders.
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
     client_socket.send(bytes(msg, "utf8"))
+
     if msg == "{disconnect}":
+        pygame.mixer.init()
+        sendNotification = pygame.mixer.Sound('eventually.wav')
+        sendNotification.play()
         client_socket.close()
         top.quit()
+            
 
 
 def on_closing(event=None):
@@ -48,7 +55,7 @@ messages_frame.pack()
 
 entry_field = tkinter.Entry(top, textvariable=my_msg)
 entry_field.bind("<Return>", send)
-entry_field.pack()
+entry_field.pack(ipadx=175)
 send_button = tkinter.Button(top, text="Send", command=send)
 send_button.pack()
 
