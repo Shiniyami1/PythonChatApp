@@ -5,8 +5,8 @@ import threading
 
 class socketThread(Thread):
     def __init__(self, client):
+        # Event stop can be set to stop to exit while loop if thread is not blocking
         self.stop = threading.Event()
-        self._running_flag = False
         self.clientSocket = client
         Thread.__init__(self, target=self.threadMain)
     
@@ -15,7 +15,7 @@ class socketThread(Thread):
         first = True
         try:
             while not self.stop.wait(0.1):
-                self._running_flag = True
+                # Deliver username and chatroom prompt
                 if first:
                     client = self.clientSocket
                     client.send(bytes("Please enter your username", "utf8"))
@@ -26,7 +26,8 @@ class socketThread(Thread):
                         client.send(bytes(instr_Msg, "utf8"))
                     except:
                         print('\nCould not send welcome message')
-                
+
+                    # Save socket information in dictionary clients
                     handle = {'socket' : client, 'room' : ''}
                     clients[username] = handle
                     roomPrompt = '\nPlease enter the chatroom you wish to join'
@@ -35,7 +36,9 @@ class socketThread(Thread):
                     except:
                         print("\nFailed to send room prompt message to client")
                 
-            
+                # Chatroom functionality
+                # If client has not entered a chatroom first recv input is chat room
+                # Otherwise accept user input and broadcast to all clients that are associated with chatroom
                 userInput = client.recv(buffer_size)
                 if clients[username]['room'] == '':
                     roomName = userInput.decode("utf8")
@@ -44,6 +47,7 @@ class socketThread(Thread):
                     self.broadcast(bytes(userInput, "utf8"),roomName)
                 elif userInput != bytes("{disconnect}", "utf8"):
                     self.broadcast(userInput, roomName, username+": ")
+                # When a user disconnects broadcast that they have disconnected to chatroom
                 else:
                     try:
                         client.send(bytes("{disconnect}", "utf8"))
@@ -53,18 +57,21 @@ class socketThread(Thread):
                         self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
                         break
         except:
-            pass
-        finally:
-            self._running_flag = False
-    def broadcast(self, msg, room, prefix=""):  # prefix is for name identification.
-        """Broadcasts a message to all the clients."""
+            print('Could not process transaction')
+    # Broadcast function: sends all clients associated with a chatroom a message
+    def broadcast(self, msg, room, prefix=""):
+        # Each user has an object containing socket and chatroom in the clients dictionary
+        # Send a message using a socket only to the users in the chatroom
+        # If a user has closed a connection handle the ConnectionResetError by printing a message in terminal
         for user in clients.values():
             if user['room'] == room:
                 try:
                     user['socket'].send(bytes(prefix, "utf8")+msg)
                 except:
-                    print("Client " +str(user['socket'])+ " has disconnected")
+                    print("Client " +str(addresses[user['socket']])+ " has disconnected")
 
+    # Shutdowns down each socket preventing subsequent reads and closes the socket, unblocking the thread
+    # Sets stop flag on Event that allows threadMain to exit if thread is not blocking
     def terminate(self):
         self.clientSocket.shutdown(SHUT_RD)
         self.clientSocket.close()
@@ -74,30 +81,32 @@ class socketThread(Thread):
 class serverThread(Thread):
     def __init__(self):
         self.stop = threading.Event()
-        self._running_flag = False
         Thread.__init__(self, target=self.threadMain)
 
     def threadMain(self):
         # Handles each incoming connection request
+        # A socketThread is created per connection to handle chatroom functionality
+        # Each IP and port of incoming connection is saved in addresses dictionary
         counter = 0
         try:
             while not self.stop.wait(0.1):
-                self._running_flag = True
                 try: 
                     client, client_address = server.accept()
                     print("%s:%s has connected." % client_address)
                     addresses[client] = client_address
+                    # create new socketThread and start it
                     temp = socketThread(client)
                     temp.start()
+                    # save each socketThread in _sockets dictionary
                     _sockets[str(counter)] = temp
-                    print(temp)
-                    print(_sockets)
                 except:
                     print("\nFailed to connect to client")
-        finally:
-                self._running_flag = False
+        except:
+            print('Server failed to accept client connection')
             
-                
+    # Shutdowns down the serverThread
+    # Calls terminate on each socketThread in _sockets
+    # If no socketThreads have been created handle error
     def terminate(self):
         try:
             for thread in _sockets.values():
@@ -105,6 +114,7 @@ class serverThread(Thread):
                 thread.join()
         except:
             print('No socketThreads to terminate')
+        # Create a local connection to server socket to unblock accept() call
         socket(AF_INET, SOCK_STREAM).connect(('localhost',4200))
         self.stop.set()
 
@@ -121,6 +131,8 @@ conn_addr = (host_addr, port_num)
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(conn_addr)
 
+# start serverThread
+# terminate entire server when user enters 'shutdown
 if __name__ == "__main__":
     server.listen(5)
     print("Waiting for connections...\n")
