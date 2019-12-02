@@ -22,6 +22,7 @@ def getMsg():
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
         except OSError:  # Possibly client has left the chat.
+            closeClient()
             break
 
 def on_closing(event=None):
@@ -36,8 +37,11 @@ def sendMsg(event=None):  # event is passed by binders.
     client_socket.send(bytes(sendMsg, "utf8"))
 
     if sendMsg == "{disconnect}":
-        client_socket.close()
-        root.quit()
+        closeClient()
+
+def closeClient():
+    client_socket.close()
+    root.quit()
 
 def darkMode(event=None):
     root.configure(background=darkBG)
