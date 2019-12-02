@@ -11,11 +11,12 @@ def receive():
     while True:
         try:
             msg = client_socket.recv(buffer_size).decode("utf8")
-            msg_list.insert(END, msg)
+            chatWindow.insert(END, msg)
             if 'has joined' in msg:
                 sendNotification = pygame.mixer.Sound('eventually.wav')
                 sendNotification.play()
-            elif 'has left the chat.' in msg:
+            elif 'has disconnected from the chat.' in msg:
+                msg.split()
                 sendNotification = pygame.mixer.Sound('deduction.wav')
                 sendNotification.play()
             else:
@@ -23,7 +24,6 @@ def receive():
                 recvNotification.play()
         except OSError:  # Possibly client has left the chat.
             break
-
 
 def send(event=None):  # event is passed by binders.
     """Handles sending of messages."""
@@ -40,24 +40,64 @@ def on_closing(event=None):
     userInput.set("{disconnect}")
     send()
 
+"""GUI stuff"""
 root = Tk()
 root.title("SE3313 Project 2019 Chat")
-
-msgBox = Frame(root)
-userInput = StringVar()  # For the messages to be sent.
-# my_msg.set("Type your messages here.")
-scrollbar = Scrollbar(msgBox)  # To navigate through past messages.
+msgFrame = Frame(root)  #Frame for messages
+inputFrame = Frame(root)    #Frame for user input stuff
+displayModeFrame = Frame(root)  #Frame for GUI mode buttons
+scrollbar = Scrollbar(msgFrame)  # To navigate through past messages.
 scrollbar.pack(side=RIGHT, fill=Y)
 # Following will contain the messages.
-msg_list = Listbox(msgBox, height=30, width=100, yscrollcommand=scrollbar.set)
-msg_list.pack(side=LEFT, fill=BOTH)
-msgBox.pack()
+chatWindow = Listbox(msgFrame, height=30, width=100, yscrollcommand=scrollbar.set)
+chatWindow.pack(side=LEFT, pady=20, padx=10,fill=BOTH)
+msgFrame.pack()
 
-inputBar = Entry(root, textvariable=userInput)
+#colours for GUI
+darkBG = '#383736'
+darkRed = '#a12d25'
+orig_colour = root.cget("background")
+
+def darkMode(event=None):
+    root.configure(background=darkBG)
+    msgFrame.configure(background=darkBG)
+    chatWindow.configure(background='gray',fg='white')
+    send_button.configure(background=darkRed,fg='white')
+    inputBar.configure(background='gray')
+    inputFrame.configure(background=darkBG)
+    dark_button.configure(background=darkBG)
+    light_button.configure(background=darkBG)
+    guiLabel.configure(background=darkBG)
+    displayModeFrame.configure(background=darkBG)
+
+def lightMode(event=None):
+    root.configure(background=orig_colour)
+    msgFrame.configure(background=orig_colour)
+    chatWindow.configure(background='white',fg='black')
+    send_button.configure(background=orig_colour,fg='black')
+    inputBar.configure(background='white')
+    inputFrame.configure(background=orig_colour)
+    dark_button.configure(background=orig_colour)
+    light_button.configure(background=orig_colour)
+    guiLabel.configure(background=orig_colour)
+    displayModeFrame.configure(background=orig_colour)
+
+userInput = StringVar()  # For the messages to be sent.
+#userInput.set("Type your messages here.")
+inputBar = Entry(inputFrame, textvariable=userInput)
 inputBar.bind("<Return>", send)
-inputBar.pack(ipadx=175,side=LEFT,pady=20,padx=10)
-send_button = Button(root, text="Send", command=send)
-send_button.pack(side=LEFT,padx=10)
+inputBar.pack(ipadx=175,side=LEFT, pady=20, padx=10)
+send_button = Button(inputFrame, text="Send", command=send)
+send_button.pack(side=LEFT, pady=20)
+inputFrame.pack()
+
+guiLabel = Label(displayModeFrame, text="Change Colour Scheme: ")
+guiLabel.pack(side=TOP)
+light_button = Radiobutton(displayModeFrame, text='Light mode', command=lightMode)
+dark_button = Radiobutton(displayModeFrame, text='Dark mode', command=darkMode)
+dark_button.pack(side=LEFT)
+light_button.pack(side=LEFT,pady=5)
+displayModeFrame.pack()
 
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
@@ -73,7 +113,7 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
 except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
-    msg_list.insert(END, 'Client failed to connect to server!')
+    chatWindow.insert(END, 'Client failed to connect to server!')
 
     client_socket.close()
     

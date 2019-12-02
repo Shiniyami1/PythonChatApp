@@ -50,7 +50,7 @@ class socketThread(Thread):
                     except:
                         pass
                     finally:
-                        self.broadcast(bytes("%s has left the chat." % name, "utf8"), room)
+                        self.broadcast(bytes("%s has disconnected from the chat." % name, "utf8"), room)
                         break
         except:
             pass
