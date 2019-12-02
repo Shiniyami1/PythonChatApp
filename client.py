@@ -13,12 +13,12 @@ def receive():
             msg = client_socket.recv(buffer_size).decode("utf8")
             chatWindow.insert(END, msg)
             if 'has joined' in msg:
-                sendNotification = pygame.mixer.Sound('eventually.wav')
-                sendNotification.play()
+                joinNotification = pygame.mixer.Sound('eventually.wav')
+                joinNotification.play()
             elif 'has disconnected from the chat.' in msg:
                 msg.split()
-                sendNotification = pygame.mixer.Sound('deduction.wav')
-                sendNotification.play()
+                discNotification = pygame.mixer.Sound('deduction.wav')
+                discNotification.play()
             else:
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
@@ -104,7 +104,7 @@ displayModeFrame.pack()
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
 #----Now comes the sockets part----
-host_addr = 'localhost'
+host_addr = '3.82.6.57'
 port_num = 4200
 
 buffer_size = 1024
