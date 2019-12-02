@@ -8,6 +8,7 @@ class socketThread(Thread):
         # Event stop can be set to stop to exit while loop if thread is not blocking
         self.stop = threading.Event()
         self.clientSocket = client
+        self._guard = threading.Lock()
         Thread.__init__(self, target=self.threadMain)
     
     def threadMain(self):
@@ -44,9 +45,11 @@ class socketThread(Thread):
                     roomName = userInput.decode("utf8")
                     clients[username]['room'] = roomName
                     userInput = "%s has joined %s!" % (username,roomName)
-                    self.broadcast(bytes(userInput, "utf8"),roomName)
+                    with self._guard:
+                        self.broadcast(bytes(userInput, "utf8"),roomName)
                 elif userInput != bytes("{disconnect}", "utf8"):
-                    self.broadcast(userInput, roomName, username+": ")
+                    with self._guard:
+                        self.broadcast(userInput, roomName, username+": ")
                 # When a user disconnects broadcast that they have disconnected to chatroom
                 else:
                     try:
@@ -54,7 +57,8 @@ class socketThread(Thread):
                     except:
                         pass
                     finally:
-                        self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
+                        with self._guard:
+                            self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
                         break
         except:
             print('Could not process transaction')
