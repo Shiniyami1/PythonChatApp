@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
-"""Script for Tkinter GUI chat client."""
+# Imports
 from socket import AF_INET, socket, SOCK_STREAM
 import socketserver
 from threading import Thread
-import tkinter, time, pygame
+from tkinter import *
+import time, pygame
 
 pygame.mixer.init()
 def receive():
@@ -11,7 +11,7 @@ def receive():
     while True:
         try:
             msg = client_socket.recv(buffer_size).decode("utf8")
-            msg_list.insert(tkinter.END, msg)
+            msg_list.insert(END, msg)
             if 'has joined' in msg:
                 sendNotification = pygame.mixer.Sound('eventually.wav')
                 sendNotification.play()
@@ -33,35 +33,34 @@ def send(event=None):  # event is passed by binders.
 
     if msg == "{disconnect}":
         client_socket.close()
-        top.quit()
+        root.quit()
 
 def on_closing(event=None):
     """This function is to be called when the window is closed."""
     userInput.set("{disconnect}")
     send()
 
-top = tkinter.Tk()
-top.title("SE3313 Project 2019 Chat")
+root = Tk()
+root.title("SE3313 Project 2019 Chat")
 
-msgBox = tkinter.Frame(top)
-userInput = tkinter.StringVar()  # For the messages to be sent.
+msgBox = Frame(root)
+userInput = StringVar()  # For the messages to be sent.
 # my_msg.set("Type your messages here.")
-scrollbar = tkinter.Scrollbar(msgBox)  # To navigate through past messages.
-scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+scrollbar = Scrollbar(msgBox)  # To navigate through past messages.
+scrollbar.pack(side=RIGHT, fill=Y)
 # Following will contain the messages.
-msg_list = tkinter.Listbox(msgBox, height=30, width=100, yscrollcommand=scrollbar.set)
-msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
-#msg_list.pack()
+msg_list = Listbox(msgBox, height=30, width=100, yscrollcommand=scrollbar.set)
+msg_list.pack(side=LEFT, fill=BOTH)
 msgBox.pack()
 
-inputBar = tkinter.Entry(top, textvariable=userInput)
+inputBar = Entry(root, textvariable=userInput)
 inputBar.bind("<Return>", send)
-inputBar.pack(ipadx=175)
-send_button = tkinter.Button(top, text="Send", command=send)
-send_button.pack()
+inputBar.pack(ipadx=175,side=LEFT,pady=20,padx=10)
+send_button = Button(root, text="Send", command=send)
+send_button.pack(side=LEFT,padx=10)
 
 
-top.protocol("WM_DELETE_WINDOW", on_closing)
+root.protocol("WM_DELETE_WINDOW", on_closing)
 
 #----Now comes the sockets part----
 host_addr = 'localhost'
@@ -74,13 +73,13 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
 except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
-    msg_list.insert(tkinter.END, 'Client failed to connect to server!')
+    msg_list.insert(END, 'Client failed to connect to server!')
 
     client_socket.close()
     
     time.sleep(5)
-    top.quit()
+    root.quit()
 
 receive_thread = Thread(target=receive)
 receive_thread.start()
-tkinter.mainloop()  # Starts GUI execution.
+mainloop()  # Starts GUI
