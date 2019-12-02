@@ -55,19 +55,20 @@ msgFrame.pack()
 
 #colours for GUI
 darkBG = '#383736'
+darkChat = '#2b2b2b'
 darkRed = '#a12d25'
 orig_colour = root.cget("background")
 
 def darkMode(event=None):
     root.configure(background=darkBG)
     msgFrame.configure(background=darkBG)
-    chatWindow.configure(background='gray',fg='white')
+    chatWindow.configure(background=darkChat, fg=darkRed)
     send_button.configure(background=darkRed,fg='white')
-    inputBar.configure(background='gray')
+    inputBar.configure(background='gray', fg=darkRed)
     inputFrame.configure(background=darkBG)
-    dark_button.configure(background=darkBG)
-    light_button.configure(background=darkBG)
-    guiLabel.configure(background=darkBG)
+    dark_button.configure(background=darkRed, fg='white')
+    light_button.configure(background=darkRed, fg='white')
+    guiLabel.configure(background=darkBG, fg='white')
     displayModeFrame.configure(background=darkBG)
 
 def lightMode(event=None):
@@ -77,9 +78,9 @@ def lightMode(event=None):
     send_button.configure(background=orig_colour,fg='black')
     inputBar.configure(background='white')
     inputFrame.configure(background=orig_colour)
-    dark_button.configure(background=orig_colour)
-    light_button.configure(background=orig_colour)
-    guiLabel.configure(background=orig_colour)
+    dark_button.configure(background=orig_colour, fg='black')
+    light_button.configure(background=orig_colour, fg='black')
+    guiLabel.configure(background=orig_colour, fg='black')
     displayModeFrame.configure(background=orig_colour)
 
 userInput = StringVar()  # For the messages to be sent.
@@ -93,10 +94,10 @@ inputFrame.pack()
 
 guiLabel = Label(displayModeFrame, text="Change Colour Scheme: ")
 guiLabel.pack(side=TOP)
-light_button = Radiobutton(displayModeFrame, text='Light mode', command=lightMode)
-dark_button = Radiobutton(displayModeFrame, text='Dark mode', command=darkMode)
+light_button = Button(displayModeFrame, text='Light mode', command=lightMode)
+dark_button = Button(displayModeFrame, text='Dark mode', command=darkMode)
 dark_button.pack(side=LEFT)
-light_button.pack(side=LEFT,pady=5)
+light_button.pack(side=LEFT,pady=10)
 displayModeFrame.pack()
 
 
