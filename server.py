@@ -19,16 +19,16 @@ class socketThread(Thread):
                 if first:
                     client = self.clientSocket
                     client.send(bytes("Please enter your username", "utf8"))
-                    name = client.recv(buffer).decode("utf8")
-                    welcome = 'Type {disconnect} to exit.'
+                    username = client.recv(buffer_size).decode("utf8")
+                    instr_Msg = 'Type {disconnect} to exit.'
                     first = False
                     try:
-                        client.send(bytes(welcome, "utf8"))
+                        client.send(bytes(instr_Msg, "utf8"))
                     except:
                         print('\nCould not send welcome message')
                 
                     handle = {'socket' : client, 'room' : ''}
-                    clients[name] = handle
+                    clients[username] = handle
                     roomPrompt = '\nPlease enter the chatroom you wish to join'
                     try:
                         client.send(bytes(roomPrompt, "utf8"))
@@ -36,21 +36,21 @@ class socketThread(Thread):
                         print("\nFailed to send room prompt message to client")
                 
             
-                message = client.recv(buffer)
-                if clients[name]['room'] == '':
-                    room = message.decode("utf8")
-                    clients[name]['room'] = room
-                    message = "%s has joined %s!" % (name,room)
-                    self.broadcast(bytes(message, "utf8"),room)
-                elif message != bytes("{disconnect}", "utf8"):
-                    self.broadcast(message, room, name+": ")
+                userInput = client.recv(buffer_size)
+                if clients[username]['room'] == '':
+                    roomName = userInput.decode("utf8")
+                    clients[username]['room'] = roomName
+                    userInput = "%s has joined %s!" % (username,roomName)
+                    self.broadcast(bytes(userInput, "utf8"),roomName)
+                elif userInput != bytes("{disconnect}", "utf8"):
+                    self.broadcast(userInput, roomName, username+": ")
                 else:
                     try:
                         client.send(bytes("{disconnect}", "utf8"))
                     except:
                         pass
                     finally:
-                        self.broadcast(bytes("%s has disconnected from the chat." % name, "utf8"), room)
+                        self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
                         break
         except:
             pass
@@ -113,13 +113,13 @@ clients = {}
 addresses = {}
 _sockets = {}
 
-host = ''
-port = 4200
-buffer = 1024
-address = (host, port)
+host_addr = ''
+port_num = 4200
+buffer_size = 1024
+conn_addr = (host_addr, port_num)
 
 server = socket(AF_INET, SOCK_STREAM)
-server.bind(address)
+server.bind(conn_addr)
 
 if __name__ == "__main__":
     server.listen(5)

@@ -6,17 +6,16 @@ from tkinter import *
 import time, pygame
 
 pygame.mixer.init()
-def receive():
+def getMsg():
     """Handles receiving of messages."""
     while True:
         try:
-            msg = client_socket.recv(buffer_size).decode("utf8")
-            chatWindow.insert(END, msg)
-            if 'has joined' in msg:
+            recvMsg = client_socket.recv(buffer_size).decode("utf8")
+            chatWindow.insert(END, recvMsg)
+            if 'has joined' in recvMsg:
                 joinNotification = pygame.mixer.Sound('eventually.wav')
                 joinNotification.play()
-            elif 'has disconnected from the chat.' in msg:
-                msg.split()
+            elif 'has disconnected from the chat.' in recvMsg:
                 discNotification = pygame.mixer.Sound('deduction.wav')
                 discNotification.play()
             else:
@@ -25,39 +24,20 @@ def receive():
         except OSError:  # Possibly client has left the chat.
             break
 
-def send(event=None):  # event is passed by binders.
-    """Handles sending of messages."""
-    msg = userInput.get()
-    userInput.set("")  # Clears input field.
-    client_socket.send(bytes(msg, "utf8"))
-
-    if msg == "{disconnect}":
-        client_socket.close()
-        root.quit()
-
 def on_closing(event=None):
     """This function is to be called when the window is closed."""
     userInput.set("{disconnect}")
-    send()
+    sendMsg()
 
-"""GUI stuff"""
-root = Tk()
-root.title("SE3313 Project 2019 Chat")
-msgFrame = Frame(root)  #Frame for messages
-inputFrame = Frame(root)    #Frame for user input stuff
-displayModeFrame = Frame(root)  #Frame for GUI mode buttons
-scrollbar = Scrollbar(msgFrame)  # To navigate through past messages.
-scrollbar.pack(side=RIGHT, fill=Y)
-# Following will contain the messages.
-chatWindow = Listbox(msgFrame, height=30, width=100, yscrollcommand=scrollbar.set)
-chatWindow.pack(side=LEFT, pady=20, padx=10,fill=BOTH)
-msgFrame.pack()
+def sendMsg(event=None):  # event is passed by binders.
+    """Handles sending of messages."""
+    sendMsg = userInput.get()
+    userInput.set("")  # Clears input field.
+    client_socket.send(bytes(sendMsg, "utf8"))
 
-#colours for GUI
-darkBG = '#383736'
-darkChat = '#2b2b2b'
-darkRed = '#a12d25'
-orig_colour = root.cget("background")
+    if sendMsg == "{disconnect}":
+        client_socket.close()
+        root.quit()
 
 def darkMode(event=None):
     root.configure(background=darkBG)
@@ -83,12 +63,27 @@ def lightMode(event=None):
     guiLabel.configure(background=orig_colour, fg='black')
     displayModeFrame.configure(background=orig_colour)
 
-userInput = StringVar()  # For the messages to be sent.
-#userInput.set("Type your messages here.")
+"""GUI stuff"""
+# Frames foramin window
+root = Tk()
+root.title("SE3313 Project 2019 Chat")
+msgFrame = Frame(root)  #Frame for messages
+inputFrame = Frame(root)    #Frame for user input stuff
+displayModeFrame = Frame(root)  #Frame for GUI mode buttons
+
+# Listbox to display  messages
+scrollbar = Scrollbar(msgFrame)
+scrollbar.pack(side=RIGHT, fill=Y)
+chatWindow = Listbox(msgFrame, height=30, width=100, yscrollcommand=scrollbar.set)
+chatWindow.pack(side=LEFT, pady=20, padx=10,fill=BOTH)
+msgFrame.pack()
+
+# Individual GUI Elements
+userInput = StringVar()
 inputBar = Entry(inputFrame, textvariable=userInput)
-inputBar.bind("<Return>", send)
+inputBar.bind("<Return>", sendMsg)
 inputBar.pack(ipadx=175,side=LEFT, pady=20, padx=10)
-send_button = Button(inputFrame, text="Send", command=send)
+send_button = Button(inputFrame, text="Send", command=sendMsg)
 send_button.pack(side=LEFT, pady=20)
 inputFrame.pack()
 
@@ -100,11 +95,19 @@ dark_button.pack(side=LEFT)
 light_button.pack(side=LEFT,pady=10)
 displayModeFrame.pack()
 
+#colours for GUI
+darkBG = '#383736'
+darkChat = '#2b2b2b'
+darkRed = '#a12d25'
+orig_colour = root.cget("background")
 
+
+
+# Brute Exit Window via GUI escape button (The Big Red X)
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
-#----Now comes the sockets part----
-host_addr = '3.82.6.57'
+# Initialize Connection 
+host_addr = 'localhost'
 port_num = 4200
 
 buffer_size = 1024
@@ -121,6 +124,6 @@ except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as erro
     time.sleep(5)
     root.quit()
 
-receive_thread = Thread(target=receive)
+receive_thread = Thread(target=getMsg)
 receive_thread.start()
 mainloop()  # Starts GUI
