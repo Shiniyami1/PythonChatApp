@@ -12,6 +12,7 @@ def getMsg():
         try:
             recvMsg = client_socket.recv(buffer_size).decode("utf8")
             chatWindow.insert(END, recvMsg)
+            chatWindow.yview(END)
             if 'has joined' in recvMsg:
                 joinNotification = pygame.mixer.Sound('eventually.wav')
                 joinNotification.play()
@@ -22,6 +23,10 @@ def getMsg():
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
         except OSError:  # Possibly client has left the chat.
+            errMsg = "***Connection to Server may have been Interrupted. Closing Client...***"
+            chatWindow.insert(END, errMsg)
+            chatWindow.yview(END)
+            time.sleep(3)
             closeClient()
             break
 
@@ -34,7 +39,12 @@ def sendMsg(event=None):  # event is passed by binders.
     """Handles sending of messages."""
     sendMsg = userInput.get()
     userInput.set("")  # Clears input field.
-    client_socket.send(bytes(sendMsg, "utf8"))
+    try:
+        client_socket.send(bytes(sendMsg, "utf8"))
+    except:
+        errMsg = "***Sending message failed. Connection to Server may have been Interrupted.***"
+        chatWindow.insert(END, errMsg)
+        chatWindow.yview(END)
 
     if sendMsg == "{disconnect}":
         closeClient()
@@ -105,11 +115,10 @@ darkChat = '#2b2b2b'
 darkRed = '#a12d25'
 orig_colour = root.cget("background")
 
-
-
 # Brute Exit Window via GUI escape button (The Big Red X)
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
+"""Connection/Socket Code"""
 # Initialize Connection 
 host_addr = 'localhost'
 port_num = 4200
@@ -120,11 +129,9 @@ conn_addr = (host_addr, port_num)
 client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
-except (ConnectionRefusedError, ConnectionRefusedError, ConnectionError) as error:
+except:
     chatWindow.insert(END, 'Client failed to connect to server!')
-
     client_socket.close()
-    
     time.sleep(5)
     root.quit()
 
