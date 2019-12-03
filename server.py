@@ -61,7 +61,7 @@ class socketThread(Thread):
                             self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
                         break
         except:
-            print('Client\n' +str(self.clientSocket)+ '\nconnection closed')
+            print('\nClient Socket Closed:\n' +str(self.clientSocket))
     # Broadcast function: sends all clients associated with a chatroom a message
     def broadcast(self, msg, room, prefix=""):
         # Each user has an object containing socket and chatroom in the clients dictionary
@@ -77,7 +77,7 @@ class socketThread(Thread):
     # Shutdowns down each socket preventing subsequent reads and closes the socket, unblocking the thread
     # Sets stop flag on Event that allows threadMain to exit if thread is not blocking
     def terminate(self):
-        self.clientSocket.shutdown(SHUT_RD)
+        #self.clientSocket.shutdown(SHUT_RDWR)
         self.clientSocket.close()
         self.stop.set()
             
@@ -85,13 +85,14 @@ class socketThread(Thread):
 class serverThread(Thread):
     def __init__(self):
         self.stop = threading.Event()
+        self.counter = 0
         Thread.__init__(self, target=self.threadMain)
 
     def threadMain(self):
         # Handles each incoming connection request
         # A socketThread is created per connection to handle chatroom functionality
         # Each IP and port of incoming connection is saved in addresses dictionary
-        counter = 0
+        
         try:
             while not self.stop.wait(0.1):
                 try: 
@@ -102,7 +103,8 @@ class serverThread(Thread):
                     temp = socketThread(client)
                     temp.start()
                     # save each socketThread in _sockets dictionary
-                    _sockets[str(counter)] = temp
+                    _sockets[str(self.counter)] = temp
+                    self.counter+=1
                 except:
                     print("\nFailed to connect to client")
         except:
@@ -112,8 +114,10 @@ class serverThread(Thread):
     # Calls terminate on each socketThread in _sockets
     # If no socketThreads have been created handle error
     def terminate(self):
+        print(_sockets)
         try:
             for thread in _sockets.values():
+                print(thread)
                 thread.terminate()
                 thread.join()
         except:
@@ -126,6 +130,7 @@ class serverThread(Thread):
 clients = {}
 addresses = {}
 _sockets = {}
+
 
 host_addr = ''
 port_num = 4200
