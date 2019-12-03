@@ -127,7 +127,7 @@ class serverThread(Thread):
             addresses[client] = client_address
 
             # if a local connection has been made, terminate() has been called
-            if client_address[0] == '127.0.0.1':
+            if client_address[0] == '127.0.0.1' and self.stop.is_set():
                 break
             # create new socketThread and start it
             temp = socketThread(client)
