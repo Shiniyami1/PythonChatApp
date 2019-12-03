@@ -23,8 +23,8 @@ def getMsg():
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
         except OSError as err:  # Possibly client has left the chat.
-            print(err)
-            closeClient()
+            print("Cannot receive message. Server is not connected.")
+            closeClient(err)
             break
 
 def on_closing(event=None):
@@ -39,16 +39,19 @@ def sendMsg(event=None):  # event is passed by binders.
     try:
         client_socket.send(bytes(sendMsg, "utf8"))
     except OSError as err:
-        print(err)
+        print("Server connection lost")
         errMsg = "***Sending message failed. Connection to Server may have been Interrupted.***"
         chatWindow.insert(END, errMsg)
         chatWindow.yview(END)
+        closeClient(err)
 
     if sendMsg == "{disconnect}":
-        closeClient()
+        closeClient("no err")
 
-def closeClient():
-    client_socket.close()
+def closeClient(err):
+    if err == 'no err':
+        client_socket.shutdown(1)
+        client_socket.close()
     root.quit()
 
 def darkMode(event=None):
@@ -128,10 +131,11 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
 except OSError as err:
-    print(err)
+    print("Could not connect to server")
     chatWindow.insert(END, 'Client failed to connect to server!')
-    client_socket.close()
-    time.sleep(5)
+    #client_socket.shutdown(1)
+    #client_socket.close()
+    time.sleep(2)
     root.quit()
 
 receive_thread = Thread(target=getMsg)
