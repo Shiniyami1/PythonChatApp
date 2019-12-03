@@ -77,7 +77,6 @@ class socketThread(Thread):
     # Shutdowns down each socket preventing subsequent reads and closes the socket, unblocking the thread
     # Sets stop flag on Event that allows threadMain to exit if thread is not blocking
     def terminate(self):
-        #self.clientSocket.shutdown(SHUT_RDWR)
         self.clientSocket.close()
         self.stop.set()
             
@@ -117,7 +116,6 @@ class serverThread(Thread):
         print(_sockets)
         try:
             for thread in _sockets.values():
-                print(thread)
                 thread.terminate()
                 thread.join()
         except:
