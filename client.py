@@ -23,10 +23,7 @@ def getMsg():
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
         except OSError:  # Possibly client has left the chat.
-            errMsg = "***Connection to Server may have been Interrupted. Closing Client...***"
-            chatWindow.insert(END, errMsg)
-            chatWindow.yview(END)
-            time.sleep(3)
+
             closeClient()
             break
 
