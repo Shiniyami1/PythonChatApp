@@ -16,7 +16,7 @@ class socketThread(Thread):
     
     def threadMain(self):
         client = self.clientSocket
-        while not self.stop.wait(1):            
+        while not self.stop.wait(0.1):            
             # Deliver username and chatroom prompt
             if self.first:
                 self.first = False
@@ -27,9 +27,8 @@ class socketThread(Thread):
                     break
                 try:
                     username = client.recv(buffer_size).decode("utf8")
-                except OSError as err:
-                    print(err)
-                    break
+                except:
+                    print("Failed to read socket")
                 
                 instr_Msg = 'Type {disconnect} to exit.'
                 try:
@@ -49,8 +48,9 @@ class socketThread(Thread):
                     break
                 try:
                     userInput = client.recv(buffer_size)
-                except OSError as err:
-                    break
+                except:
+                    print("Failed to read socket")
+                    userInput = ''
                 
                 roomName = userInput.decode("utf8")
                 clients[username]['room'] = roomName
@@ -61,21 +61,20 @@ class socketThread(Thread):
             try:
                 userInput = client.recv(buffer_size)
             except:
-                print("Could not read socket")
+                print("Failed to read socket")
+            # If socket sends empty object b'' exit loop as client has closed socket on their end
             if not userInput:
                 break
-            
+            # Broadcast userinput to chatroom
             if userInput != bytes("{disconnect}", "utf8"):
                 with self._guard:
                     self.broadcast(userInput, roomName, username+": ")
-                    print("userinput: "+userInput.decode("utf8"))
+            # Broadcast disconnect message and terminate thread
             else:
                 with self._guard:
                     self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
-                self.stop.set()
-                break
+                self.terminate()
         
-        print('exited chat loop')
         
 
     # Broadcast function: sends all clients associated with a chatroom a message
@@ -88,8 +87,7 @@ class socketThread(Thread):
             if user['room'] == room and user['room'] != '':
                 try:
                     user['socket'].send(bytes(prefix, "utf8")+msg)
-                except OSError as err:
-                    print(err)
+                except OSError:
                     print("Client " +str(addresses[user['socket']])+ " has disconnected")
                     break
 
@@ -99,10 +97,10 @@ class socketThread(Thread):
         #
         try:
             self.clientSocket.send((bytes("{disconnect}","utf8")))
-            #self.clientSocket.shutdown(SHUT_RD)
+            self.clientSocket.shutdown(SHUT_RD)
             self.clientSocket.close()
-        except OSError as err:
-            print(err)
+        except OSError:
+            print('Socket closed, terminate message not sent')
         self.stop.set()
             
 
@@ -138,9 +136,6 @@ class serverThread(Thread):
             _sockets[str(self.counter)] = temp
             self.counter+=1
             
-        print("exited server loop")
-        
-            
             
     # Shutdowns down the serverThread
     # Calls terminate on each socketThread in _sockets
@@ -148,9 +143,7 @@ class serverThread(Thread):
     def terminate(self):
         try:
             for thread in _sockets.values():
-                print(thread)
                 thread.terminate()
-                print('terminate called')
                 thread.join()
         except:
             print('No socketThreads to terminate')
@@ -188,7 +181,7 @@ if __name__ == "__main__":
         if terminate == 'shutdown':
             server_thread.terminate()
             server_thread.join()
-            print(server_thread)
             break
+    server.shutdown(SHUT_RDWR)
     server.close()
     
