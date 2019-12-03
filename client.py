@@ -19,12 +19,15 @@ def getMsg():
             elif 'has disconnected from the chat.' in recvMsg:
                 discNotification = pygame.mixer.Sound('deduction.wav')
                 discNotification.play()
+            elif recvMsg == "{disconnect}":
+                closeClient()
+
             else:
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
         except OSError as err:  # Possibly client has left the chat.
-            print("Cannot receive message. Server is not connected.")
-            closeClient(err)
+            print(err)
+            closeClient()
             break
 
 def on_closing(event=None):
@@ -39,19 +42,22 @@ def sendMsg(event=None):  # event is passed by binders.
     try:
         client_socket.send(bytes(sendMsg, "utf8"))
     except OSError as err:
-        print("Server connection lost")
+        print(err)
         errMsg = "***Sending message failed. Connection to Server may have been Interrupted.***"
+        time.sleep(1.5)
+        closeClient()
         chatWindow.insert(END, errMsg)
         chatWindow.yview(END)
-        closeClient(err)
 
     if sendMsg == "{disconnect}":
-        closeClient("no err")
+        closeClient()
 
-def closeClient(err):
-    if err == 'no err':
-        client_socket.shutdown(1)
+def closeClient():
+    try:
+        #client_socket.shutdown(0)
         client_socket.close()
+    except:
+        print('socket is already closed')
     root.quit()
 
 def darkMode(event=None):
@@ -121,7 +127,7 @@ root.protocol("WM_DELETE_WINDOW", on_closing)
 
 """Connection/Socket Code"""
 # Initialize Connection 
-host_addr = 'localhost'
+host_addr = '192.168.0.21'
 port_num = 4200
 
 buffer_size = 1024
@@ -131,11 +137,10 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
 except OSError as err:
-    print("Could not connect to server")
+    print(err)
     chatWindow.insert(END, 'Client failed to connect to server!')
-    #client_socket.shutdown(1)
-    #client_socket.close()
-    time.sleep(2)
+    client_socket.close()
+    time.sleep(5)
     root.quit()
 
 receive_thread = Thread(target=getMsg)
