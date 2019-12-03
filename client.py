@@ -20,13 +20,13 @@ def getMsg():
                 discNotification = pygame.mixer.Sound('deduction.wav')
                 discNotification.play()
             elif recvMsg == "{disconnect}":
+                chatWindow.insert(END, 'Server connection closed...')
                 closeClient()
 
             else:
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
-        except OSError as err:  # Possibly client has left the chat.
-            print(err)
+        except OSError:  # Possibly client has left the chat.
             closeClient()
             break
 
@@ -54,10 +54,11 @@ def sendMsg(event=None):  # event is passed by binders.
 
 def closeClient():
     try:
-        #client_socket.shutdown(0)
+        client_socket.shutdown(0)
         client_socket.close()
     except:
-        print('socket is already closed')
+        print('Socket is closed')
+    time.sleep(2)
     root.quit()
 
 def darkMode(event=None):
@@ -127,7 +128,7 @@ root.protocol("WM_DELETE_WINDOW", on_closing)
 
 """Connection/Socket Code"""
 # Initialize Connection 
-host_addr = '192.168.0.21'
+host_addr = 'localhost'
 port_num = 4200
 
 buffer_size = 1024
@@ -137,10 +138,8 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
 except OSError as err:
-    print(err)
-    chatWindow.insert(END, 'Client failed to connect to server!')
-    client_socket.close()
-    time.sleep(5)
+    print("Failed to connect to server")
+    chatWindow.insert(END, 'Client failed to connect to server! Closing window...')
     root.quit()
 
 receive_thread = Thread(target=getMsg)
