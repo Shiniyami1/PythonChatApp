@@ -15,7 +15,8 @@ class socketThread(Thread):
 
         first = True
         try:
-            while not self.stop.wait(0.1):
+            while self.stop.is_set():
+                print(self.stop.is_set())
                 # Deliver username and chatroom prompt
                 if first:
                     client = self.clientSocket
@@ -62,6 +63,8 @@ class socketThread(Thread):
                         break
         except:
             print('\nClient Socket Closed:\n' +str(self.clientSocket))
+        finally:
+            self.stop.set
     # Broadcast function: sends all clients associated with a chatroom a message
     def broadcast(self, msg, room, prefix=""):
         # Each user has an object containing socket and chatroom in the clients dictionary
@@ -85,6 +88,7 @@ class serverThread(Thread):
     def __init__(self):
         self.stop = threading.Event()
         self.counter = 0
+        self.flag = False
         Thread.__init__(self, target=self.threadMain)
 
     def threadMain(self):
@@ -92,36 +96,38 @@ class serverThread(Thread):
         # A socketThread is created per connection to handle chatroom functionality
         # Each IP and port of incoming connection is saved in addresses dictionary
         
-        try:
-            while not self.stop.wait(0.1):
-                try: 
-                    client, client_address = server.accept()
-                    print("%s:%s has connected." % client_address)
-                    addresses[client] = client_address
-                    # create new socketThread and start it
-                    temp = socketThread(client)
-                    temp.start()
-                    # save each socketThread in _sockets dictionary
-                    _sockets[str(self.counter)] = temp
-                    self.counter+=1
-                except:
-                    print("\nFailed to connect to client")
-        except:
-            print('Server failed to accept client connection')
+        
+        while not self.stop.is_set():
+            try: 
+                client, client_address = server.accept()
+                print("%s:%s has connected." % client_address)
+                addresses[client] = client_address
+                # create new socketThread and start it
+                temp = socketThread(client)
+                temp.start()
+                # save each socketThread in _sockets dictionary
+                _sockets[str(self.counter)] = temp
+                self.counter+=1
+            except:
+                print("\nFailed to connect to client")
+        
+            
             
     # Shutdowns down the serverThread
     # Calls terminate on each socketThread in _sockets
     # If no socketThreads have been created handle error
     def terminate(self):
-        print(_sockets)
         try:
             for thread in _sockets.values():
+                print(thread)
                 thread.terminate()
                 thread.join()
         except:
             print('No socketThreads to terminate')
         # Create a local connection to server socket to unblock accept() call
-        socket(AF_INET, SOCK_STREAM).connect(('localhost',4200))
+        t = socket(AF_INET, SOCK_STREAM)
+        addr = ('localhost',4200)
+        t.connect(addr)
         self.stop.set()
 
         
@@ -150,5 +156,6 @@ if __name__ == "__main__":
         if terminate == 'shutdown':
             server_thread.terminate()
             server_thread.join()
+            print(server_thread)
             break
     server.close()

@@ -22,8 +22,8 @@ def getMsg():
             else:
                 recvNotification = pygame.mixer.Sound('when.wav')
                 recvNotification.play()
-        except OSError:  # Possibly client has left the chat.
-
+        except OSError as err:  # Possibly client has left the chat.
+            print(err)
             closeClient()
             break
 
@@ -38,7 +38,8 @@ def sendMsg(event=None):  # event is passed by binders.
     userInput.set("")  # Clears input field.
     try:
         client_socket.send(bytes(sendMsg, "utf8"))
-    except:
+    except OSError as err:
+        print(err)
         errMsg = "***Sending message failed. Connection to Server may have been Interrupted.***"
         chatWindow.insert(END, errMsg)
         chatWindow.yview(END)
@@ -126,7 +127,8 @@ conn_addr = (host_addr, port_num)
 client_socket = socket(AF_INET, SOCK_STREAM)
 try:
     client_socket.connect(conn_addr)
-except:
+except OSError as err:
+    print(err)
     chatWindow.insert(END, 'Client failed to connect to server!')
     client_socket.close()
     time.sleep(5)
