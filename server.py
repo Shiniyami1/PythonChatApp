@@ -61,7 +61,7 @@ class socketThread(Thread):
                             self.broadcast(bytes("%s has disconnected from the chat." % username, "utf8"), roomName)
                         break
         except:
-            print('Client connection closed')
+            print('Client\n' +str(self.clientSocket)+ '\nconnection closed')
     # Broadcast function: sends all clients associated with a chatroom a message
     def broadcast(self, msg, room, prefix=""):
         # Each user has an object containing socket and chatroom in the clients dictionary
