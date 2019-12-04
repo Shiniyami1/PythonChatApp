@@ -50,7 +50,7 @@ class socketThread(Thread):
                     userInput = client.recv(buffer_size)
                 except:
                     print("Failed to read socket")
-                    userInput = bytes('', "utf8")
+                    break
                 
                 roomName = userInput.decode("utf8")
                 clients[username]['room'] = roomName
