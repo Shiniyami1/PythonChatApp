@@ -47,12 +47,12 @@ class socketThread(Thread):
                     print("\nFailed to send room prompt message to client")
                     break
                 try:
-                    userInput = client.recv(buffer_size).decode("utf8")
+                    userInput = client.recv(buffer_size)
                 except:
                     print("Failed to read socket")
-                    userInput = ''
+                    userInput = bytes('', "utf8")
                 
-                roomName = userInput
+                roomName = userInput.decode("utf8")
                 clients[username]['room'] = roomName
                 userInput = "%s has joined %s!" % (username,roomName)
                 with self._guard:
@@ -62,6 +62,7 @@ class socketThread(Thread):
                 userInput = client.recv(buffer_size)
             except:
                 print("Failed to read socket")
+                break
             # If socket sends empty object b'' exit loop as client has closed socket on their end
             if not userInput:
                 break
@@ -182,6 +183,9 @@ if __name__ == "__main__":
             server_thread.terminate()
             server_thread.join()
             break
-    server.shutdown(SHUT_RDWR)
+    try:
+        server.shutdown(SHUT_RDWR)
+    except:
+        pass    
     server.close()
     
