@@ -47,12 +47,12 @@ class socketThread(Thread):
                     print("\nFailed to send room prompt message to client")
                     break
                 try:
-                    userInput = client.recv(buffer_size)
+                    userInput = client.recv(buffer_size).decode("utf8")
                 except:
                     print("Failed to read socket")
                     userInput = ''
                 
-                roomName = userInput.decode("utf8")
+                roomName = userInput
                 clients[username]['room'] = roomName
                 userInput = "%s has joined %s!" % (username,roomName)
                 with self._guard:
